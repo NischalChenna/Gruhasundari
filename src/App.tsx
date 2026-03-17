@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 ───────────────────────────────────────── */
 type Category = "blinds" | "curtains";
 type Unit = "feet" | "inches";
-type TrackOptionId = "track_premium" | "track_standard" | null;
 
 interface BlindProduct {
   id: string;
@@ -918,10 +917,14 @@ export default function GruhasundariEstimate() {
   const handleQuote = () => {
     const incomplete = windows.some((w) => {
       const c = calcWindow(w);
+
       if (!w.width || !w.height) return true;
+      if (c.wFt <= 0 || c.hFt <= 0) return true;
+
       if (w.cat === "blinds" && !w.blindProd) return true;
       if (w.cat === "curtains" && (!w.curtainProd || !w.clothPrice))
         return true;
+
       return false;
     });
     if (incomplete) {
