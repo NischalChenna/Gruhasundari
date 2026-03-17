@@ -1,0 +1,12 @@
+body {
+  background: linear-gradient(135deg,#1e1e2f,#3a3a5f);
+  color: white;
+  font-family: sans-serif;
+}
+
+.card {
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.1);
+  padding: 30px;
+  border-radius: 16px;
+}
