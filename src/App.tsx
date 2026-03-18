@@ -998,7 +998,7 @@ export default function GruhasundariEstimate() {
     lines.push("Please confirm and let me know the next steps. Thank you! 🙏");
 
     const msg = encodeURIComponent(lines.join("\n"));
-    window.open(`https://wa.me/8074008026?text=${msg}`, "_blank");
+    window.open(`https://wa.me/918074008026?text=${msg}`, "_blank");
   };
 
   return (
