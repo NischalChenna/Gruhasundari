@@ -47,14 +47,14 @@ interface WindowEntry {
 ───────────────────────────────────────── */
 const BLIND_FIXING_PER_UNIT = 150;
 const STITCHING_PER_PANEL = 150;
-const TRACK_FIXING_CHARGE = 500;
+const TRACK_FIXING_CHARGE = 120;
 
 const BLINDS: BlindProduct[] = [
   {
     id: "roller",
     name: "Roller",
     icon: "◯",
-    ratePerSqFt: 165,
+    ratePerSqFt: 155,
     tagline: "Clean & minimal",
   },
   {
@@ -68,14 +68,14 @@ const BLINDS: BlindProduct[] = [
     id: "zebra",
     name: "Zebra",
     icon: "≋",
-    ratePerSqFt: 245,
+    ratePerSqFt: 225,
     tagline: "Dual-layer",
   },
   {
     id: "custom",
     name: "Customized",
     icon: "✦",
-    ratePerSqFt: 245,
+    ratePerSqFt: 225,
     tagline: "Bespoke design",
   },
   {
@@ -96,7 +96,7 @@ const BLINDS: BlindProduct[] = [
     id: "exterior",
     name: "Exterior",
     icon: "⫿",
-    ratePerSqFt: 165,
+    ratePerSqFt: 145,
     tagline: "Rough and tough",
   },
 ];
