@@ -54,7 +54,7 @@ const BLINDS: BlindProduct[] = [
     id: "roller",
     name: "Roller",
     icon: "◯",
-    ratePerSqFt: 145,
+    ratePerSqFt: 155,
     tagline: "Clean & minimal",
   },
   {
