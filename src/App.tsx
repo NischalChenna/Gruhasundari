@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 ───────────────────────────────────────── */
 type Category = "blinds" | "curtains";
 type Unit = "feet" | "inches";
+type TrackOptionId = "track_premium" | "track_standard" | null;
 
 interface BlindProduct {
   id: string;
@@ -44,7 +45,7 @@ interface WindowEntry {
 /* ─────────────────────────────────────────
    CONSTANTS
 ───────────────────────────────────────── */
-const BLIND_FIXING_PER_UNIT = 250;
+const BLIND_FIXING_PER_UNIT = 150;
 const STITCHING_PER_PANEL = 150;
 const TRACK_FIXING_CHARGE = 500;
 
@@ -68,7 +69,7 @@ const BLINDS: BlindProduct[] = [
     name: "Zebra",
     icon: "≋",
     ratePerSqFt: 245,
-    tagline: "Dual-layer sheer",
+    tagline: "Dual-layer",
   },
   {
     id: "custom",
@@ -88,8 +89,15 @@ const BLINDS: BlindProduct[] = [
     id: "vertical",
     name: "Vertical",
     icon: "⫿",
-    ratePerSqFt: 165,
+    ratePerSqFt: 110,
     tagline: "Floor-to-ceiling",
+  },
+  {
+    id: "exterior",
+    name: "Exterior",
+    icon: "⫿",
+    ratePerSqFt: 165,
+    tagline: "Rough and tough",
   },
 ];
 
@@ -152,6 +160,7 @@ interface WindowCalc {
   wFt: number;
   hFt: number;
   sqFt: number;
+  sqFtRounded: number;
   blindBase: number;
   blindFixing: number;
   blindTotal: number;
@@ -184,7 +193,9 @@ function calcWindow(w: WindowEntry): WindowCalc {
     ? (TRACK_OPTIONS.find((t) => t.id === w.trackOption) ?? null)
     : null;
 
-  const blindBase = selBlind && sqFt > 0 ? sqFt * selBlind.ratePerSqFt : 0;
+  const sqFtRounded = Math.round(sqFt);
+  const blindBase =
+    selBlind && sqFt > 0 ? sqFtRounded * selBlind.ratePerSqFt : 0;
   const blindFixing = selBlind && sqFt > 0 ? BLIND_FIXING_PER_UNIT : 0;
   const blindTotal = blindBase + blindFixing;
 
@@ -205,6 +216,7 @@ function calcWindow(w: WindowEntry): WindowCalc {
     wFt,
     hFt,
     sqFt,
+    sqFtRounded,
     blindBase,
     blindFixing,
     blindTotal,
@@ -414,8 +426,12 @@ function WindowCard({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
               >
-                {calc.sqFt.toFixed(2)} sq.ft · {calc.wFt.toFixed(2)} ft W ×{" "}
-                {calc.hFt.toFixed(2)} ft H
+                {calc.sqFt.toFixed(2)} sq.ft
+                {win.cat === "blinds" &&
+                calc.sqFtRounded !== parseFloat(calc.sqFt.toFixed(2))
+                  ? ` → ${calc.sqFtRounded} sq.ft (rounded)`
+                  : ""}{" "}
+                · {calc.wFt.toFixed(2)} ft W × {calc.hFt.toFixed(2)} ft H
                 {win.cat === "curtains" &&
                   calc.selCurtain &&
                   calc.curtainCount > 0 && (
@@ -792,7 +808,7 @@ function WindowCard({
               {win.cat === "blinds" && calc.selBlind && calc.sqFt > 0 && (
                 <>
                   <MiniRow
-                    l={`${calc.selBlind.name} · ${calc.sqFt.toFixed(2)} sq.ft × ₹${calc.selBlind.ratePerSqFt}`}
+                    l={`${calc.selBlind.name} · ${calc.sqFtRounded} sq.ft × ₹${calc.selBlind.ratePerSqFt}`}
                     v={`₹${fmtINR(calc.blindBase)}`}
                   />
                   <MiniRow
@@ -917,23 +933,72 @@ export default function GruhasundariEstimate() {
   const handleQuote = () => {
     const incomplete = windows.some((w) => {
       const c = calcWindow(w);
-
       if (!w.width || !w.height) return true;
-      if (c.wFt <= 0 || c.hFt <= 0) return true;
-
       if (w.cat === "blinds" && !w.blindProd) return true;
       if (w.cat === "curtains" && (!w.curtainProd || !w.clothPrice))
         return true;
-
       return false;
     });
     if (incomplete) {
       showToast("⚠  Please complete all window entries first");
       return;
     }
-    showToast(
-      `✓  Quote for ${windows.length} window${windows.length > 1 ? "s" : ""} sent — we'll be in touch!`,
-    );
+
+    const lines: string[] = [];
+    lines.push("Hello Gruhasundari! 👋");
+    lines.push("I'd like a quote for the following window furnishings:\n");
+
+    windows.forEach((w, i) => {
+      const c = calcWindow(w);
+      lines.push(`*${String(i + 1).padStart(2, "0")}. ${w.label}*`);
+      lines.push(`   Type: ${w.cat.toUpperCase()}`);
+      lines.push(
+        `   Size: ${c.wFt.toFixed(2)} ft (W) × ${c.hFt.toFixed(2)} ft (H)`,
+      );
+
+      if (w.cat === "blinds" && c.selBlind) {
+        lines.push(
+          `   Style: ${c.selBlind.name} @ ₹${c.selBlind.ratePerSqFt}/sq.ft`,
+        );
+        lines.push(`   Area: ${c.sqFtRounded} sq.ft (rounded)`);
+        lines.push(
+          `   Material: ₹${fmtINR(c.blindBase)}  +  Fixing: ₹${BLIND_FIXING_PER_UNIT}`,
+        );
+        lines.push(`   *Window Total: ₹${fmtINR(c.blindTotal)}*`);
+      }
+
+      if (w.cat === "curtains" && c.selCurtain) {
+        lines.push(
+          `   Style: ${c.selCurtain.name} (panel ${c.selCurtain.panelWidthIn}" shirked)`,
+        );
+        lines.push(
+          `   Panels: ${c.curtainCount} × ${c.metersPerCurtain.toFixed(2)} m = ${c.totalClothMeters.toFixed(2)} m cloth`,
+        );
+        if (parseFloat(w.clothPrice) > 0)
+          lines.push(
+            `   Cloth: ₹${w.clothPrice}/m → ₹${fmtINR(c.curtainClothCost)}`,
+          );
+        lines.push(
+          `   Stitching: ${c.curtainCount} panels × ₹${STITCHING_PER_PANEL} = ₹${fmtINR(c.curtainStitch)}`,
+        );
+        if (c.selTrack)
+          lines.push(
+            `   Track: ${c.selTrack.label} (${c.wFt.toFixed(2)} ft × ₹${c.selTrack.pricePerFt} + ₹${TRACK_FIXING_CHARGE} fixing) = ₹${fmtINR(c.trackTotal)}`,
+          );
+        lines.push(`   *Window Total: ₹${fmtINR(c.curtainGrandTotal)}*`);
+      }
+      lines.push("");
+    });
+
+    if (windows.length > 1) {
+      lines.push(`*Grand Total: ₹${fmtINR(grandTotal)}*`);
+      lines.push("");
+    }
+
+    lines.push("Please confirm and let me know the next steps. Thank you! 🙏");
+
+    const msg = encodeURIComponent(lines.join("\n"));
+    window.open(`https://wa.me/8074008026?text=${msg}`, "_blank");
   };
 
   return (
@@ -1095,7 +1160,7 @@ export default function GruhasundariEstimate() {
           whileTap={{ scale: 0.98 }}
           transition={{ duration: 0.3 }}
         >
-          <span>REQUEST FULL QUOTE</span>
+          <span>SEND QUOTE ON WHATSAPP</span>
           <motion.span
             animate={{ x: [0, 5, 0] }}
             transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
