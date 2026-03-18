@@ -46,7 +46,7 @@ interface WindowEntry {
    CONSTANTS
 ───────────────────────────────────────── */
 const BLIND_FIXING_PER_UNIT = 150;
-const STITCHING_PER_PANEL = 150;
+const STITCHING_PER_PANEL = 120;
 const TRACK_FIXING_CHARGE = 120;
 
 const BLINDS: BlindProduct[] = [
